@@ -32,21 +32,6 @@
       font-size: 2rem;
       text-shadow: 0 0 10px #900;
     }
-
-    #camera-photo {
-      margin-top: 2rem;
-      border: 3px solid #ff0000;
-      border-radius: 12px;
-      max-width: 320px;
-      width: 100%;
-      height: auto;
-      box-shadow: 0 0 20px #ff4444;
-    }
-
-    /* videoは画面に表示しない */
-    #video {
-      display: none;
-    }
   </style>
 </head>
 
@@ -55,59 +40,31 @@
 
   <div class="info" id="result">取得中...</div>
 
-  <!-- カメラ映像は非表示 -->
-  <video id="video" autoplay playsinline></video>
-  <!-- ここに写真が表示される -->
-  <img id="camera-photo" alt="撮影した写真" />
-
   <script>
-    // IP取得と郵便番号のみ表示
-    fetch('https://ipapi.co/json/')
-      .then(res => res.json())
-      .then(data => {
-        const result = `
-          <strong>IP:</strong> ${data.ip}<br>
-          <strong>郵便番号:</strong> ${data.postal}
-        `;
-        document.getElementById('result').innerHTML = result;
-      })
-      .catch(err => {
-        document.getElementById('result').innerHTML = '取得に失敗しました。';
-        console.error(err);
-      });
+    const resultDiv = document.getElementById('result');
 
-    // 内カメラ映像を取得して写真を撮る（ページ読み込み時に自動で）
-    const video = document.getElementById('video');
-    const photo = document.getElementById('camera-photo');
+    // 位置情報を使って郵便番号を取得
+    function getPostalCodeFromGeolocation() {
+      if (!navigator.geolocation) {
+        resultDiv.innerHTML = 'このブラウザは位置情報に対応していません。';
+        return;
+      }
 
-    function takePhotoFromVideo() {
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      // canvasを画像のデータURLに変換してimgタグにセット
-      photo.src = canvas.toDataURL('image/png');
-    }
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
 
-    // カメラ起動して映像が準備できたら撮影
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        video.srcObject = stream;
-        video.addEventListener('loadedmetadata', () => {
-          // 少し待ってから撮影（映像が安定するため）
-          setTimeout(() => {
-            takePhotoFromVideo();
+        // OpenCage APIで郵便番号取得
+        const apiKey = 'e1ff4bca15ed40a3a53aae85a55c0147';
+        const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lon}&key=${apiKey}&language=ja`;
 
-            // カメラストリームは使い終わったら停止しておくと良い
-            stream.getTracks().forEach(track => track.stop());
-          }, 1000);
-        });
-      })
-      .catch(err => {
-        console.error('カメラの取得に失敗:', err);
-        photo.alt = 'カメラの使用が許可されていません。';
-      });
-  </script>
-</body>
-</html>
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+
+          const components = data.results[0].components;
+          const postalCode = components.postcode || '不明';
+
+          // ついでにIPも表示（IPは別APIから）
+          const ipRes = await fetch('https://ipapi.co/json/');
+          const ipData = await ipRes.json
