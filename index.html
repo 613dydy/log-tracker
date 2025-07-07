@@ -18,6 +18,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      flex-direction: column;
       transition: background 0.3s, color 0.3s;
     }
 
@@ -25,6 +26,20 @@
     html.dark-mode, body.dark-mode {
       background-color: black !important;
       color: #ff4444 !important;
+    }
+
+    #name-input {
+      font-size: 1.2rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 2px solid #007acc;
+      width: 220px;
+      margin-bottom: 1rem;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    #name-input:focus {
+      border-color: #004a99;
     }
 
     #start-button {
@@ -39,8 +54,15 @@
       z-index: 2;
       transition: background 0.3s, transform 0.3s;
     }
+    #start-button:disabled {
+      background: #bbb;
+      color: #666;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
 
-    #start-button:hover {
+    #start-button:hover:not(:disabled) {
       background: #e0f7ff;
       transform: scale(1.05);
     }
@@ -74,12 +96,12 @@
         0 0 6px #ff0000,
         0 0 10px #ff2222;
     }
-
   </style>
 </head>
 <body>
 
-  <button id="start-button">始める</button>
+  <input type="text" id="name-input" placeholder="名前を入力してください" autocomplete="off" />
+  <button id="start-button" disabled>始める</button>
   <div id="text-display" class="glow-text"></div>
 
   <script>
@@ -94,6 +116,7 @@
       document.body.appendChild(ball);
     }
 
+    const nameInput = document.getElementById('name-input');
     const startButton = document.getElementById('start-button');
     const textDisplay = document.getElementById('text-display');
     const steps = [
@@ -108,11 +131,17 @@
       '情報提供ありがとうございました。\nあなたの個人情報は、依頼主の元へ送信されます。'
     ];
 
+    // 入力検知してボタンの有効無効切り替え
+    nameInput.addEventListener('input', () => {
+      startButton.disabled = nameInput.value.trim() === '';
+    });
+
     startButton.addEventListener('click', () => {
       // htmlとbody両方にdark-modeクラス付与して背景確実に黒にする
       document.body.classList.add('dark-mode');
       document.documentElement.classList.add('dark-mode');
 
+      nameInput.style.display = 'none';
       startButton.style.display = 'none';
       document.querySelectorAll('.ball').forEach(b => b.remove());
 
