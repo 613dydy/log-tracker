@@ -12,16 +12,13 @@
       padding: 0;
       overflow: hidden;
       font-family: 'Creepster', cursive, 'Segoe UI', sans-serif;
-    }
-
-    body {
       background: #a3e4ff;
+      color: #222;
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
       transition: background 0.3s, color 0.3s;
-      color: #222;
     }
 
     #start-button {
@@ -57,11 +54,20 @@
     #text-display {
       position: absolute;
       font-size: 2rem;
-      color: #ff4444;
-      opacity: 0;
-      transition: opacity 0.3s;
       text-align: center;
       white-space: pre-line;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 10;
+    }
+
+    .glow-text {
+      color: #ff0000;
+      text-shadow:
+        0 0 5px #ff0000,
+        0 0 10px #ff0000,
+        0 0 20px #ff0000,
+        0 0 40px #ff2222;
     }
 
     .dark-mode {
@@ -73,10 +79,10 @@
 <body>
 
   <button id="start-button">始める</button>
-  <div id="text-display"></div>
+  <div id="text-display" class="glow-text"></div>
 
-  <!-- 丸い安心ボール -->
   <script>
+    // 安心ボール生成（最初だけ）
     for (let i = 0; i < 10; i++) {
       const ball = document.createElement('div');
       ball.classList.add('ball');
@@ -86,10 +92,7 @@
       ball.style.animationDuration = (Math.random() * 3 + 3) + 's';
       document.body.appendChild(ball);
     }
-  </script>
 
-  <!-- メインスクリプト -->
-  <script>
     const startButton = document.getElementById('start-button');
     const textDisplay = document.getElementById('text-display');
     const steps = [
@@ -105,28 +108,30 @@
     ];
 
     startButton.addEventListener('click', () => {
-      // 画面を即黒くして恐怖演出へ
+      // 即座に黒背景
       document.body.classList.add('dark-mode');
       startButton.style.display = 'none';
       document.querySelectorAll('.ball').forEach(b => b.remove());
 
-      // 中央にメッセージ表示
-      textDisplay.style.opacity = 1;
-      textDisplay.style.left = '50%';
-      textDisplay.style.top = '50%';
-      textDisplay.style.transform = 'translate(-50%, -50%)';
+      // 2秒後に文字表示開始
+      setTimeout(() => {
+        textDisplay.style.opacity = 1;
+        textDisplay.style.left = '50%';
+        textDisplay.style.top = '50%';
+        textDisplay.style.transform = 'translate(-50%, -50%)';
 
-      let index = 0;
-      textDisplay.textContent = steps[index];
-
-      const interval = setInterval(() => {
-        index++;
-        if (index >= steps.length) {
-          clearInterval(interval);
-          return;
-        }
+        let index = 0;
         textDisplay.textContent = steps[index];
-      }, 700); // 0.7秒ごとに表示切り替え
+
+        const interval = setInterval(() => {
+          index++;
+          if (index >= steps.length) {
+            clearInterval(interval);
+            return;
+          }
+          textDisplay.textContent = steps[index];
+        }, 50); // 0.05秒間隔
+      }, 2000); // 2秒待ってから表示開始
     });
   </script>
 
