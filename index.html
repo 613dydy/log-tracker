@@ -41,46 +41,20 @@
   <div class="info" id="result">取得中...</div>
 
   <script>
-    const resultDiv = document.getElementById('result');
-
-    function getPrefectureFromGeolocation() {
-      if (!navigator.geolocation) {
-        resultDiv.innerHTML = 'お前雑魚すぎWWWWWWWWWWWW';
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-
-        const apiKey = 'e1ff4bca15ed40a3a53aae85a55c0147';
-        const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lon}&key=${apiKey}&language=ja`;
-
-        try {
-          const res = await fetch(url);
-          const data = await res.json();
-
-          const components = data.results[0].components;
-          const prefecture = components.state || '不明';
-
-          // IPも取得（おまけ）
-          const ipRes = await fetch('https://ipapi.co/json/');
-          const ipData = await ipRes.json();
-
-          resultDiv.innerHTML = `
-            <strong>IP:</strong> ${ipData.ip}<br>
-            <strong>都道府県:</strong> ${prefecture}
-          `;
-        } catch (err) {
-          console.error(err);
-          resultDiv.innerHTML = 'おっつ～WWWWWWWWWWWWWWWWWWWWWWWWW';
-        }
-      }, () => {
-        resultDiv.innerHTML = 'おっつ～WWWWWWWWWWWWWWWWWWWWWWWWW';
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        const ip = data.ip || '不明';
+        const region = data.region || '不明';
+        document.getElementById('result').innerHTML = `
+          <strong>IP:</strong> ${ip}<br>
+          <strong>都道府県:</strong> ${region}
+        `;
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('result').innerHTML = '情報の取得に失敗しました。';
       });
-    }
-
-    getPrefectureFromGeolocation();
   </script>
 </body>
 </html>
