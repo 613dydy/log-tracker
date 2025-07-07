@@ -8,7 +8,7 @@
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(to bottom right, #e0eafc, #cfdef3);
       padding: 2rem;
-      color: #333;
+      color: #000;
       margin: 0;
     }
     h1 {
@@ -38,28 +38,47 @@
   <div class="info" id="result">取得中...</div>
 
   <div class="footer">
-    はい、おつ～、情報提供ありがとね～ｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗｗ
+    はいWWWWおつ～WWWWWWW情報提供ありがとね～WWWWWWWW
   </div>
 
   <script>
-    fetch('https://ipapi.co/json/')
-      .then(response => response.json())
-      .then(data => {
-        const result = `
-          <strong>IP:</strong> ${data.ip} <br>
-          <strong>国:</strong> ${data.country_name} (${data.country_code})<br>
-          <strong>地域:</strong> ${data.region}<br>
-          <strong>市区町村:</strong> ${data.city}<br>
-          <strong>郵便番号:</strong> ${data.postal}<br>
-          <strong>プロバイダ:</strong> ${data.org}<br>
-          <strong>時刻:</strong> ${new Date().toLocaleString()}
-        `;
-        document.getElementById('result').innerHTML = result;
-      })
-      .catch(error => {
-        document.getElementById('result').innerText = '情報の取得に失敗しました。';
-        console.error('エラー:', error);
-      });
-  </script>
+  fetch('https://ipapi.co/json/')
+    .then(response => response.json())
+    .then(data => {
+      const result = `
+        <strong>IP:</strong> ${data.ip} <br>
+        <strong>国:</strong> ${data.country_name} (${data.country_code})<br>
+        <strong>地域:</strong> ${data.region}<br>
+        <strong>市区町村:</strong> ${data.city}<br>
+        <strong>郵便番号:</strong> ${data.postal}<br>
+        <strong>プロバイダ:</strong> ${data.org}<br>
+        <strong>時刻:</strong> ${new Date().toLocaleString()}
+      `;
+      document.getElementById('result').innerHTML = result;
+
+      // ▼ ここからGeolocation
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude.toFixed(5);
+            const lon = position.coords.longitude.toFixed(5);
+            document.getElementById('result').innerHTML += `
+              <br><strong>より正確な緯度:</strong> ${lat}<br>
+              <strong>より正確な経度:</strong> ${lon}
+            `;
+          },
+          (error) => {
+            document.getElementById('result').innerHTML += '<br>位置情報の取得に失敗しました（許可が必要です）。';
+          }
+        );
+      } else {
+        document.getElementById('result').innerHTML += '<br>このブラウザでは位置情報が使えません。';
+      }
+    })
+    .catch(error => {
+      document.getElementById('result').innerText = '情報の取得に失敗しました。';
+      console.error('エラー:', error);
+    });
+</script>
 </body>
 </html>
