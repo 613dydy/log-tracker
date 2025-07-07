@@ -2,59 +2,131 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>送信完了</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet" />
-
+  <title>開始画面</title>
   <style>
-    body {
-      font-family: 'Creepster', cursive, 'Segoe UI', sans-serif;
-      background: black;
-      color: #ff4444;
-      padding: 2rem;
-      text-align: center;
-      font-size: 1.5rem;
+    html, body {
       margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
     }
 
-    .info {
-      margin-top: 3rem;
-      background: #111;
-      display: inline-block;
-      padding: 2rem;
-      border-radius: 12px;
-      border: 2px solid #ff0000;
-      box-shadow: 0 0 30px red;
+    body {
+      background: #a3e4ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      transition: background 1s, color 1s;
+      color: #222;
     }
 
-    h1 {
-      color: #ff0000;
+    #start-button {
+      padding: 1rem 2rem;
       font-size: 2rem;
-      text-shadow: 0 0 10px #900;
+      background: white;
+      color: #007acc;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      z-index: 2;
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    #start-button:hover {
+      background: #e0f7ff;
+      transform: scale(1.05);
+    }
+
+    .ball {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      animation: float 6s infinite ease-in-out alternate;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(100px); }
+    }
+
+    #text-display {
+      position: absolute;
+      font-size: 2rem;
+      color: #ff4444;
+      opacity: 0;
+      transition: opacity 0.5s;
+      text-align: center;
+      white-space: pre-line;
+    }
+
+    .dark-mode {
+      background: black !important;
+      color: #ff4444;
     }
   </style>
 </head>
-
 <body>
-  <h1 id="main-title">送信完了</h1>
 
-  <div class="info" id="result">取得中...</div>
+  <button id="start-button">始める</button>
+  <div id="text-display"></div>
 
+  <!-- 安心感ある球体 -->
   <script>
-    fetch('https://ipapi.co/json/')
-      .then(res => res.json())
-      .then(data => {
-        const ip = data.ip || '不明';
-        const region = data.region || '不明';
-        document.getElementById('result').innerHTML = `
-          <strong>IP:</strong> ${ip}<br>
-          <strong>都道府県:</strong> ${region}
-        `;
-      })
-      .catch(err => {
-        console.error(err);
-        document.getElementById('result').innerHTML = '情報の取得に失敗しました。';
-      });
+    for (let i = 0; i < 10; i++) {
+      const ball = document.createElement('div');
+      ball.classList.add('ball');
+      ball.style.width = ball.style.height = Math.random() * 60 + 40 + 'px';
+      ball.style.left = Math.random() * 100 + 'vw';
+      ball.style.top = Math.random() * 100 + 'vh';
+      ball.style.animationDuration = (Math.random() * 3 + 3) + 's';
+      document.body.appendChild(ball);
+    }
   </script>
+
+  <!-- メイン処理 -->
+  <script>
+    const startButton = document.getElementById('start-button');
+    const textDisplay = document.getElementById('text-display');
+    const steps = [
+      '郵便番号取得中',
+      '送信完了',
+      '電話番号取得中',
+      '送信完了',
+      'IPアドレス取得中',
+      '送信完了',
+      '写真を取得中',
+      '送信完了'
+    ];
+
+    startButton.addEventListener('click', () => {
+      // 背景を不気味に変更
+      document.body.classList.add('dark-mode');
+
+      // ボタンと球体を非表示
+      startButton.style.display = 'none';
+      document.querySelectorAll('.ball').forEach(b => b.remove());
+
+      // 中央に文字表示
+      textDisplay.style.opacity = 1;
+      textDisplay.style.left = '50%';
+      textDisplay.style.top = '50%';
+      textDisplay.style.transform = 'translate(-50%, -50%)';
+
+      let index = 0;
+      textDisplay.textContent = steps[index];
+
+      const interval = setInterval(() => {
+        index++;
+        if (index >= steps.length) {
+          clearInterval(interval);
+          return;
+        }
+        textDisplay.textContent = steps[index];
+      }, 4000);
+    });
+  </script>
+
 </body>
 </html>
