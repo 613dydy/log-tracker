@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>これみつけたやつ天才だろｗ</title>
 
-  <!-- 不気味フォント（Google Fonts） -->
+  <!-- 不気味フォント -->
   <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 
@@ -39,6 +39,7 @@
       max-width: 500px;
       margin: auto;
       border: 1px solid #2e2e2e;
+      min-height: 200px;
     }
 
     .footer {
@@ -65,46 +66,74 @@
 </head>
 
 <body>
-  <h1>あなたのアクセス情報</h1>
+  <h1 id="main-title">送信中...</h1>
   <div class="info" id="result">取得中...</div>
   <div id="map"></div>
-  <div class="footer">はい、おっつ～WWWWWWWWWWWWWWWWWW情報提供ありがとWWWWWWWWWWWWWWWW</div>
+  <div class="footer">情報提供ありがとね～WWWWWWWWWWWWWWWWWWWWWWWWW</div>
 
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
+    // タイトル切り替え（送信中 → 完了）
+    setTimeout(() => {
+      document.getElementById('main-title').textContent = "送信完了。あなたのアクセス情報";
+    }, 5000);
+
+    // タイピング風表示関数
+    function typeText(targetElement, text, speed = 20) {
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i < text.length) {
+          targetElement.innerHTML += text.charAt(i);
+          i++;
+        } else {
+          clearInterval(interval);
+        }
+      }, speed);
+    }
+
+    // IP情報取得
     fetch('https://ipapi.co/json/')
       .then(response => response.json())
       .then(data => {
-        const result = `
-          <strong>IP:</strong> ${data.ip} <br>
-          <strong>国:</strong> ${data.country_name} (${data.country_code})<br>
-          <strong>地域:</strong> ${data.region}<br>
-          <strong>市区町村:</strong> ${data.city}<br>
-          <strong>郵便番号:</strong> ${data.postal}<br>
-          <strong>プロバイダ:</strong> ${data.org}<br>
-          <strong>時刻:</strong> ${new Date().toLocaleString()}<br>
-        `;
-        document.getElementById('result').innerHTML = result;
+        const infoHTML = `
+<strong>IP:</strong> ${data.ip} <br>
+<strong>国:</strong> ${data.country_name} (${data.country_code})<br>
+<strong>地域:</strong> ${data.region}<br>
+<strong>市区町村:</strong> ${data.city}<br>
+<strong>郵便番号:</strong> ${data.postal}<br>
+<strong>プロバイダ:</strong> ${data.org}<br>
+<strong>時刻:</strong> ${new Date().toLocaleString()}<br>
+`;
+
+        const target = document.getElementById('result');
+        target.innerHTML = '';
+        typeText(target, infoHTML, 20);
       });
 
+    // Geolocation ＆ 地図＆逆ジオコーディング
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
-          document.getElementById('result').innerHTML += `
-            <strong>より正確な緯度:</strong> ${lat.toFixed(5)}<br>
-            <strong>より正確な経度:</strong> ${lon.toFixed(5)}<br>
-          `;
+          const result = document.getElementById('result');
 
-          // 地図表示
+          // 地図
           const map = L.map('map').setView([lat, lon], 13);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
           }).addTo(map);
           L.marker([lat, lon]).addTo(map).bindPopup('ここが...あなたの現在地...').openPopup();
 
-          // 逆ジオコーディング
+          // 緯度経度表示
+          setTimeout(() => {
+            result.innerHTML += `
+<br><strong>より正確な緯度:</strong> ${lat.toFixed(5)}<br>
+<strong>より正確な経度:</strong> ${lon.toFixed(5)}<br>
+`;
+          }, 1600); // 少し遅らせて追加
+
+          // 逆ジオコーディング（県名など）
           fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
             .then(response => response.json())
             .then(geoData => {
@@ -113,21 +142,20 @@
               const city = address.city || address.town || address.village || '';
               const town = address.suburb || address.ward || '';
               const locationStr = `${pref}${city}${town}`;
-              document.getElementById('result').innerHTML += `
-                <strong>あなたの現在地（推定）:</strong> ${locationStr}<br>
-                <strong>▶ 今見てるのは「${pref}」からのアクセスです！</strong><br>
-              `;
-            })
-            .catch(() => {
-              document.getElementById('result').innerHTML += '住所の取得に失敗しました。';
+              setTimeout(() => {
+                result.innerHTML += `
+<strong>あなたの現在地（推定）:</strong> ${locationStr}<br>
+<strong>▶ 今見てるのは「${pref}」からのアクセスです！</strong><br>
+`;
+              }, 2500);
             });
         },
         () => {
-          document.getElementById('result').innerHTML += '位置情報の取得に失敗しました。';
+          document.getElementById('result').innerHTML += '<br>位置情報の取得に失敗しました。';
         }
       );
     } else {
-      document.getElementById('result').innerHTML += 'このブラウザでは位置情報が取得できません。';
+      document.getElementById('result').innerHTML += '<br>このブラウザでは位置情報が取得できません。';
     }
   </script>
 </body>
