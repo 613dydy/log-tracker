@@ -2,9 +2,9 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>これみつけたやつ天才だろｗ</title>
+  <title>アクセス情報 - 闇のサイト</title>
 
-  <!-- 不気味フォント -->
+  <!-- ホラーフォント -->
   <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 
@@ -69,17 +69,17 @@
   <h1 id="main-title">送信中...</h1>
   <div class="info" id="result">取得中...</div>
   <div id="map"></div>
-  <div class="footer">情報提供ありがとね～WWWWWWWWWWWWWWWWWWWWWWWWW</div>
+  <div class="footer">...ありがとうございました...</div>
 
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
-    // タイトル切り替え（送信中 → 完了）
+    // タイトル切り替え
     setTimeout(() => {
-      document.getElementById('main-title').textContent = "送信完了。あなたのアクセス情報";
+      document.getElementById('main-title').textContent = "送信完了。";
     }, 5000);
 
-    // タイピング風表示関数
-    function typeText(targetElement, text, speed = 20) {
+    // タイピングアニメーション（速度アップ）
+    function typeText(targetElement, text, speed = 8) {
       let i = 0;
       const interval = setInterval(() => {
         if (i < text.length) {
@@ -91,7 +91,7 @@
       }, speed);
     }
 
-    // IP情報取得
+    // IP取得
     fetch('https://ipapi.co/json/')
       .then(response => response.json())
       .then(data => {
@@ -107,56 +107,9 @@
 
         const target = document.getElementById('result');
         target.innerHTML = '';
-        typeText(target, infoHTML, 20);
+        typeText(target, infoHTML, 8);
       });
 
-    // Geolocation ＆ 地図＆逆ジオコーディング
+    // Geolocation
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          const result = document.getElementById('result');
-
-          // 地図
-          const map = L.map('map').setView([lat, lon], 13);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-          }).addTo(map);
-          L.marker([lat, lon]).addTo(map).bindPopup('ここが...あなたの現在地...').openPopup();
-
-          // 緯度経度表示
-          setTimeout(() => {
-            result.innerHTML += `
-<br><strong>より正確な緯度:</strong> ${lat.toFixed(5)}<br>
-<strong>より正確な経度:</strong> ${lon.toFixed(5)}<br>
-`;
-          }, 1600); // 少し遅らせて追加
-
-          // 逆ジオコーディング（県名など）
-          fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
-            .then(response => response.json())
-            .then(geoData => {
-              const address = geoData.address;
-              const pref = address.state || '';
-              const city = address.city || address.town || address.village || '';
-              const town = address.suburb || address.ward || '';
-              const locationStr = `${pref}${city}${town}`;
-              setTimeout(() => {
-                result.innerHTML += `
-<strong>あなたの現在地（推定）:</strong> ${locationStr}<br>
-<strong>▶ 今見てるのは「${pref}」からのアクセスです！</strong><br>
-`;
-              }, 2500);
-            });
-        },
-        () => {
-          document.getElementById('result').innerHTML += '<br>位置情報の取得に失敗しました。';
-        }
-      );
-    } else {
-      document.getElementById('result').innerHTML += '<br>このブラウザでは位置情報が取得できません。';
-    }
-  </script>
-</body>
-</html>
+      navigator.geolocation.getCurrentP
