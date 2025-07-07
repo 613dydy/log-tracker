@@ -3,82 +3,132 @@
 <head>
   <meta charset="UTF-8">
   <title>これみつけたやつ天才だろｗ</title>
+
+  <!-- 不気味フォント（Google Fonts） -->
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom right, #e0eafc, #cfdef3);
+      font-family: 'Creepster', cursive, 'Segoe UI', sans-serif;
+      background: #0b0b0b;
       padding: 2rem;
-      color: #000;
+      color: #e0e0e0;
       margin: 0;
+      background-image: radial-gradient(#1e1e1e 1px, transparent 1px),
+                        radial-gradient(#1e1e1e 1px, transparent 1px);
+      background-size: 40px 40px;
+      background-position: 0 0, 20px 20px;
+      animation: flickerBg 10s infinite;
     }
+
     h1 {
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
-      color: #2c3e50;
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      color: #c0392b;
+      text-shadow: 0 0 5px #8e0000, 0 0 15px #ff0000;
+      text-align: center;
     }
+
     .info {
-      background: white;
+      background: #1a1a1a;
       padding: 1.5rem;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 15px rgba(200, 0, 0, 0.2);
       line-height: 1.6;
       max-width: 500px;
       margin: auto;
+      border: 1px solid #2e2e2e;
     }
+
     .footer {
       text-align: center;
       margin-top: 3rem;
-      color: #555;
+      color: #777;
       font-size: 0.95rem;
+    }
+
+    #map {
+      height: 300px;
+      max-width: 500px;
+      margin: 2rem auto;
+      border-radius: 12px;
+      filter: grayscale(100%) brightness(0.5);
+      border: 2px solid #333;
+    }
+
+    @keyframes flickerBg {
+      0%, 100% { background-color: #0b0b0b; }
+      50% { background-color: #121212; }
     }
   </style>
 </head>
+
 <body>
   <h1>あなたのアクセス情報</h1>
   <div class="info" id="result">取得中...</div>
+  <div id="map"></div>
+  <div class="footer">はい、おっつ～WWWWWWWWWWWWWWWWWW情報提供ありがとWWWWWWWWWWWWWWWW</div>
 
-  <div class="footer">
-    はいWWWWおつ～WWWWWWW情報提供ありがとね～WWWWWWWW
-  </div>
-
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
-  fetch('https://ipapi.co/json/')
-    .then(response => response.json())
-    .then(data => {
-      const result = `
-        <strong>IP:</strong> ${data.ip} <br>
-        <strong>国:</strong> ${data.country_name} (${data.country_code})<br>
-        <strong>地域:</strong> ${data.region}<br>
-        <strong>市区町村:</strong> ${data.city}<br>
-        <strong>郵便番号:</strong> ${data.postal}<br>
-        <strong>プロバイダ:</strong> ${data.org}<br>
-        <strong>時刻:</strong> ${new Date().toLocaleString()}
-      `;
-      document.getElementById('result').innerHTML = result;
+    fetch('https://ipapi.co/json/')
+      .then(response => response.json())
+      .then(data => {
+        const result = `
+          <strong>IP:</strong> ${data.ip} <br>
+          <strong>国:</strong> ${data.country_name} (${data.country_code})<br>
+          <strong>地域:</strong> ${data.region}<br>
+          <strong>市区町村:</strong> ${data.city}<br>
+          <strong>郵便番号:</strong> ${data.postal}<br>
+          <strong>プロバイダ:</strong> ${data.org}<br>
+          <strong>時刻:</strong> ${new Date().toLocaleString()}<br>
+        `;
+        document.getElementById('result').innerHTML = result;
+      });
 
-      // ▼ ここからGeolocation
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const lat = position.coords.latitude.toFixed(5);
-            const lon = position.coords.longitude.toFixed(5);
-            document.getElementById('result').innerHTML += `
-              <br><strong>より正確な緯度:</strong> ${lat}<br>
-              <strong>より正確な経度:</strong> ${lon}
-            `;
-          },
-          (error) => {
-            document.getElementById('result').innerHTML += '<br>位置情報の取得に失敗しました（許可が必要です）。';
-          }
-        );
-      } else {
-        document.getElementById('result').innerHTML += '<br>このブラウザでは位置情報が使えません。';
-      }
-    })
-    .catch(error => {
-      document.getElementById('result').innerText = '情報の取得に失敗しました。';
-      console.error('エラー:', error);
-    });
-</script>
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          document.getElementById('result').innerHTML += `
+            <strong>より正確な緯度:</strong> ${lat.toFixed(5)}<br>
+            <strong>より正確な経度:</strong> ${lon.toFixed(5)}<br>
+          `;
+
+          // 地図表示
+          const map = L.map('map').setView([lat, lon], 13);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+          L.marker([lat, lon]).addTo(map).bindPopup('ここが...あなたの現在地...').openPopup();
+
+          // 逆ジオコーディング
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
+            .then(response => response.json())
+            .then(geoData => {
+              const address = geoData.address;
+              const pref = address.state || '';
+              const city = address.city || address.town || address.village || '';
+              const town = address.suburb || address.ward || '';
+              const locationStr = `${pref}${city}${town}`;
+              document.getElementById('result').innerHTML += `
+                <strong>あなたの現在地（推定）:</strong> ${locationStr}<br>
+                <strong>▶ 今見てるのは「${pref}」からのアクセスです！</strong><br>
+              `;
+            })
+            .catch(() => {
+              document.getElementById('result').innerHTML += '住所の取得に失敗しました。';
+            });
+        },
+        () => {
+          document.getElementById('result').innerHTML += '位置情報の取得に失敗しました。';
+        }
+      );
+    } else {
+      document.getElementById('result').innerHTML += 'このブラウザでは位置情報が取得できません。';
+    }
+  </script>
 </body>
 </html>
