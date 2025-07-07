@@ -21,6 +21,12 @@
       transition: background 0.3s, color 0.3s;
     }
 
+    /* dark-modeはhtmlとbody両方に適用 */
+    html.dark-mode, body.dark-mode {
+      background-color: black !important;
+      color: #ff4444 !important;
+    }
+
     #start-button {
       padding: 1rem 2rem;
       font-size: 2rem;
@@ -69,10 +75,6 @@
         0 0 10px #ff2222;
     }
 
-    .dark-mode {
-      background: black !important;
-      color: #ff4444 !important;
-    }
   </style>
 </head>
 <body>
@@ -107,8 +109,10 @@
     ];
 
     startButton.addEventListener('click', () => {
-      // 即座に黒背景
+      // htmlとbody両方にdark-modeクラス付与して背景確実に黒にする
       document.body.classList.add('dark-mode');
+      document.documentElement.classList.add('dark-mode');
+
       startButton.style.display = 'none';
       document.querySelectorAll('.ball').forEach(b => b.remove());
 
@@ -128,13 +132,12 @@
 
           textDisplay.textContent = steps[index];
 
-          // 「写真を取得中」のときだけ0.7秒、それ以外は0.05秒
           const delay = steps[index] === '写真を取得中' ? 700 : 50;
           setTimeout(nextStep, delay);
         }
 
         setTimeout(nextStep, 50);
-      }, 2000); // 2秒待ってから表示開始
+      }, 2000);
     });
   </script>
 
