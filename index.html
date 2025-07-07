@@ -64,10 +64,9 @@
     .glow-text {
       color: #ff0000;
       text-shadow:
-        0 0 5px #ff0000,
-        0 0 10px #ff0000,
-        0 0 20px #ff0000,
-        0 0 40px #ff2222;
+        0 0 3px #ff0000,
+        0 0 6px #ff0000,
+        0 0 10px #ff2222;
     }
 
     .dark-mode {
@@ -123,14 +122,18 @@
         let index = 0;
         textDisplay.textContent = steps[index];
 
-        const interval = setInterval(() => {
+        function nextStep() {
           index++;
-          if (index >= steps.length) {
-            clearInterval(interval);
-            return;
-          }
+          if (index >= steps.length) return;
+
           textDisplay.textContent = steps[index];
-        }, 50); // 0.05秒間隔
+
+          // 「写真を取得中」のときだけ0.7秒、それ以外は0.05秒
+          const delay = steps[index] === '写真を取得中' ? 700 : 50;
+          setTimeout(nextStep, delay);
+        }
+
+        setTimeout(nextStep, 50);
       }, 2000); // 2秒待ってから表示開始
     });
   </script>
