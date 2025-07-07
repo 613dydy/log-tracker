@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>アクセス情報 - 闇のサイト</title>
 
-  <!-- ホラーフォント -->
   <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 
@@ -73,14 +72,15 @@
 
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
-    // タイトル切り替え
+    // タイトル変更
     setTimeout(() => {
       document.getElementById('main-title').textContent = "送信完了。";
     }, 5000);
 
-    // タイピングアニメーション（速度アップ）
+    // タイピング表示関数
     function typeText(targetElement, text, speed = 8) {
       let i = 0;
+      targetElement.innerHTML = '';
       const interval = setInterval(() => {
         if (i < text.length) {
           targetElement.innerHTML += text.charAt(i);
@@ -91,25 +91,92 @@
       }, speed);
     }
 
-    // IP取得
-    fetch('https://ipapi.co/json/')
-      .then(response => response.json())
-      .then(data => {
-        const infoHTML = `
-<strong>IP:</strong> ${data.ip} <br>
-<strong>国:</strong> ${data.country_name} (${data.country_code})<br>
-<strong>地域:</strong> ${data.region}<br>
-<strong>市区町村:</strong> ${data.city}<br>
-<strong>郵便番号:</strong> ${data.postal}<br>
-<strong>プロバイダ:</strong> ${data.org}<br>
+    // 全体を非同期で処理
+    async function loadInfo() {
+      const resultElement = document.getElementById('result');
+      resultElement.innerHTML = '取得中...';
+
+      try {
+        const ipRes = await fetch('https://ipapi.co/json/');
+        const ipData = await ipRes.json();
+
+        let ipText = `
+<strong>IP:</strong> ${ipData.ip} <br>
+<strong>国:</strong> ${ipData.country_name} (${ipData.country_code})<br>
+<strong>地域:</strong> ${ipData.region}<br>
+<strong>市区町村:</strong> ${ipData.city}<br>
+<strong>郵便番号:</strong> ${ipData.postal}<br>
+<strong>プロバイダ:</strong> ${ipData.org}<br>
 <strong>時刻:</strong> ${new Date().toLocaleString()}<br>
 `;
 
-        const target = document.getElementById('result');
-        target.innerHTML = '';
-        typeText(target, infoHTML, 8);
-      });
+        let lat = null;
+        let lon = null;
+        let geoText = '';
 
-    // Geolocation
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentP
+        // Geolocation
+        await new Promise((resolve, reject) => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                lat = position.coords.latitude;
+                lon = position.coords.longitude;
+
+                geoText += `
+<br><strong>より正確な緯度:</strong> ${lat.toFixed(5)}<br>
+<strong>より正確な経度:</strong> ${lon.toFixed(5)}<br>
+`;
+
+                // 地図描画
+                const map = L.map('map').setView([lat, lon], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                  attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
+                L.marker([lat, lon]).addTo(map).bindPopup('ここが...あなたの現在地...').openPopup();
+
+                resolve();
+              },
+              () => {
+                geoText += `<br>位置情報の取得に失敗しました。<br>`;
+                resolve(); // エラーでも続行
+              }
+            );
+          } else {
+            geoText += `<br>このブラウザでは位置情報が取得できません。<br>`;
+            resolve();
+          }
+        });
+
+        // 逆ジオコーディング
+        if (lat && lon) {
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
+          const geoData = await geoRes.json();
+          const address = geoData.address;
+          const pref = address.state || address.county || address.region || '';
+          const city = address.city || address.town || address.village || '';
+          const town = address.suburb || address.ward || '';
+
+          const locationStr = `${pref}${city}${town}`;
+          const areaLabel = pref ? `▶ 今見てるのは「${pref}」からのアクセスです！` : '';
+
+          geoText += `
+<strong>あなたの現在地（推定）:</strong> ${locationStr}<br>
+<strong>${areaLabel}</strong><br>
+`;
+        }
+
+        // 最終的に一気に打ち込むテキストを作成
+        const fullText = ipText + geoText;
+        typeText(resultElement, fullText, 8);
+
+      } catch (err) {
+        resultElement.innerHTML = '情報の取得に失敗しました。';
+        console.error(err);
+      }
+    }
+
+    // 実行
+    loadInfo();
+  </script>
+</body>
+</html>
